@@ -20,10 +20,10 @@ class Pool {
   static constexpr size_t PAGE = 4096;
 
 public:
-  Pool(size_t pages) : size(pages * PAGE) {
+  Pool(size_t max_elems) : size((max_elems * sizeof(T) + PAGE - 1) & ~(PAGE - 1)) {
     ptr = mmap(NULL, size,
                PROT_READ | PROT_WRITE,
-               MAP_PRIVATE | MAP_STACK | MAP_ANONYMOUS | MAP_GROWSDOWN,
+               MAP_PRIVATE | MAP_ANONYMOUS,
                -1, 0);
     if (ptr == MAP_FAILED) {
       throw std::runtime_error("Failed to allocate memory");
@@ -37,14 +37,9 @@ public:
     dbg("Unmapped memory at %lx\n", reinterpret_cast<size_t>(ptr));
   }
 
-  __attribute__((optimize("unroll-loops"), always_inline))
+  __attribute__((always_inline))
   T* alloc() {
     dbg("Allocated element at %lx\n", reinterpret_cast<size_t>(cur - 1));
-
-    for (size_t i = PAGE; i <= sizeof(T); i += PAGE) {
-      *(reinterpret_cast<volatile char*>(cur) - i);
-    }
-
     return --cur;
   }
 

@@ -24,7 +24,7 @@ struct Node {
 };
 
 static constexpr bool USE_FREE = false;
-static Pool<Node, USE_FREE> pool(40000);
+static Pool<Node, USE_FREE> pool(10000000);
 
 static inline Node* create_list(unsigned n) {
   Node* list = nullptr;
