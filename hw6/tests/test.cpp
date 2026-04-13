@@ -5,6 +5,10 @@
 #include <sys/resource.h>
 #include <sys/time.h>
 
+// #define _DEBUG
+
+#include "pool.h"
+
 using namespace std;
 
 static void get_usage(struct rusage& usage) {
@@ -19,10 +23,13 @@ struct Node {
   unsigned node_id;
 };
 
+static constexpr bool USE_FREE = false;
+static Pool<Node, USE_FREE> pool(40000);
+
 static inline Node* create_list(unsigned n) {
   Node* list = nullptr;
   for (unsigned i = 0; i < n; i++)
-    list = new Node({list, i});
+    list = new (pool.alloc()) Node({list, i});
   return list;
 }
 
@@ -30,7 +37,8 @@ static inline void delete_list(Node* list) {
   while (list) {
     Node* node = list;
     list = list->next;
-    delete node;
+    std::destroy_at(node);
+    pool.free(node);
   }
 }
 
